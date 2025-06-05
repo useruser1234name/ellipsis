@@ -1,6 +1,5 @@
 package com.example.ellipsis.presentation.main
 
-
 import android.graphics.Bitmap
 
 data class MainUiState(
@@ -12,5 +11,6 @@ data class MainUiState(
     val longitude: Double? = null,
     val locationName: String = "",
     val recommendedSongs: List<String> = emptyList(),
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val exifJson: String = "{}"
 )

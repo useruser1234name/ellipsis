@@ -1,6 +1,5 @@
 package com.example.ellipsis.presentation.main
 
-
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -15,10 +14,10 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel // 수정: Hilt 사용
 
 @Composable
-fun MainScreen(viewModel: MainViewModel = viewModel()) {
+fun MainScreen(viewModel: MainViewModel = hiltViewModel()) { // 수정: hiltViewModel() 사용
     val context = LocalContext.current
     val state by viewModel.uiState.collectAsState()
     var imageUri by remember { mutableStateOf<Uri?>(null) }

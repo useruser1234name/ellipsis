@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- 기본 여백 -->
+    <dimen name="spacing_tiny">4dp</dimen>
+    <dimen name="spacing_small">8dp</dimen>
+    <dimen name="spacing_medium">16dp</dimen>
+    <dimen name="spacing_large">24dp</dimen>
+    <dimen name="spacing_xlarge">32dp</dimen>
+    <dimen name="spacing_xxlarge">48dp</dimen>
+
+    <!-- 패딩 -->
+    <dimen name="padding_small">8dp</dimen>
+    <dimen name="padding_medium">16dp</dimen>
+    <dimen name="padding_large">24dp</dimen>
+    <dimen name="padding_xlarge">32dp</dimen>
+
+    <!-- 코너 반경 -->
+    <dimen name="corner_radius_small">8dp</dimen>
+    <dimen name="corner_radius_medium">16dp</dimen>
+    <dimen name="corner_radius_large">20dp</dimen>
+    <dimen name="corner_radius_xlarge">24dp</dimen>
+    <dimen name="corner_radius_button">28dp</dimen>
+
+    <!-- 버튼 크기 -->
+    <dimen name="button_height">56dp</dimen>
+    <dimen name="button_height_small">48dp</dimen>
+    <dimen name="button_padding_horizontal">32dp</dimen>
+    <dimen name="button_padding_vertical">16dp</dimen>
+
+    <!-- 카드 설정 -->
+    <dimen name="card_elevation">8dp</dimen>
+    <dimen name="card_elevation_small">4dp</dimen>
+    <dimen name="card_margin">8dp</dimen>
+    <dimen name="card_padding">20dp</dimen>
+
+    <!-- 이미지 크기 -->
+    <dimen name="image_size_small">64dp</dimen>
+    <dimen name="image_size_medium">120dp</dimen>
+    <dimen name="image_size_large">200dp</dimen>
+    <dimen name="image_size_xlarge">300dp</dimen>
+
+    <!-- 로고 및 아이콘 -->
+    <dimen name="logo_size">200dp</dimen>
+    <dimen name="icon_size_small">16dp</dimen>
+    <dimen name="icon_size_medium">24dp</dimen>
+    <dimen name="icon_size_large">32dp</dimen>
+    <dimen name="icon_size_xlarge">48dp</dimen>
+
+    <!-- 프로그레스 인디케이터 -->
+    <dimen name="progress_size">32dp</dimen>
+    <dimen name="progress_stroke_width">2dp</dimen>
+
+    <!-- 텍스트 여백 -->
+    <dimen name="text_margin_small">4dp</dimen>
+    <dimen name="text_margin_medium">8dp</dimen>
+    <dimen name="text_margin_large">16dp</dimen>
+
+    <!-- 다이얼로그 -->
+    <dimen name="dialog_padding">24dp</dimen>
+    <dimen name="dialog_margin">16dp</dimen>
+    <dimen name="dialog_corner_radius">24dp</dimen>
+
+    <!-- 리스트 아이템 -->
+    <dimen name="list_item_height">56dp</dimen>
+    <dimen name="list_item_padding">16dp</dimen>
+    <dimen name="list_item_margin">8dp</dimen>
+
+    <!-- 최소 터치 영역 -->
+    <dimen name="min_touch_target">48dp</dimen>
+
+    <!-- 화면 여백 -->
+    <dimen name="screen_padding">24dp</dimen>
+    <dimen name="screen_margin">16dp</dimen>
+
+    <!-- 음악 스태프 관련 -->
+    <dimen name="staff_height">120dp</dimen>
+    <dimen name="staff_line_width">2dp</dimen>
+    <dimen name="note_size">16dp</dimen>
+    <dimen name="note_stem_width">2dp</dimen>
+    <dimen name="note_stem_height">30dp</dimen>
+
+</resources>

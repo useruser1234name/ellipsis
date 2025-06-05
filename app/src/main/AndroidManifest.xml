@@ -2,31 +2,219 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- ===== 네트워크 권한 ===== -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
+    <!-- ===== 위치 권한 (사진 촬영 위치 정보용) ===== -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- ===== 저장소 및 미디어 권한 ===== -->
+    <!-- Android 12 이하 -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
+    <!-- Android 13+ 미디어 권한 -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <!-- 임시 파일 쓰기 (캐시용) -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28"
+        tools:ignore="ScopedStorage" />
+
+    <!-- ===== 카메라 권한 (추후 확장용) ===== -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- ===== 진동 권한 (피드백용) ===== -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- ===== 전경 서비스 권한 (백그라운드 음악 분석용) ===== -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
+    <!-- ===== Wake Lock (백그라운드 처리용) ===== -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- ===== 알림 권한 (Android 13+) ===== -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- ===== 하드웨어 기능 선언 ===== -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera.autofocus"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.location"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.location.gps"
+        android:required="false" />
 
     <application
+        android:name=".MyApplication"
         android:allowBackup="true"
         android:usesCleartextTraffic="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:name=".MyApplication"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Ellipsis"
-        tools:targetApi="31">
+        android:requestLegacyExternalStorage="false"
+        android:preserveLegacyExternalStorage="false"
+        android:hardwareAccelerated="true"
+        android:largeHeap="true"
+        android:networkSecurityConfig="@xml/network_security_config"
+        tools:targetApi="34">
+
+        <!-- ===== 메인 액티비티 ===== -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.Ellipsis">
+            android:theme="@style/Theme.Ellipsis"
+            android:windowSoftInputMode="adjustResize"
+            android:screenOrientation="portrait"
+            android:configChanges="orientation|screenSize|keyboardHidden">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!-- 이미지 공유 받기 -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+
+            <!-- 다중 이미지 공유 받기 -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+
+            <!-- 딥링크 지원 (추후 확장용) -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https"
+                    android:host="ellipsis.music" />
+            </intent-filter>
         </activity>
+
+        <!-- ===== 파일 제공자 (이미지 캐시 공유용) ===== -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <!-- ===== WorkManager 초기화 비활성화 (수동 초기화) ===== -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
+
+        <!-- ===== 앱 메타데이터 ===== -->
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+
+        <!-- ML Kit 메타데이터 -->
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="ocr,ica,face,barcode,pose,segmentation" />
+
+        <!-- ===== 추후 확장용 컴포넌트들 (현재는 주석 처리) ===== -->
+
+        <!-- 백그라운드 서비스 (추후 구현시 활성화) -->
+        <!--
+        <service
+            android:name=".service.MusicAnalysisService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+        -->
+
+        <!-- 네트워크 변경 리시버 (추후 구현시 활성화) -->
+        <!--
+        <receiver
+            android:name=".receiver.NetworkChangeReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+            </intent-filter>
+        </receiver>
+        -->
+
+        <!-- 디버그 액티비티 (추후 구현시 활성화) -->
+        <!--
+        <activity
+            android:name=".debug.DebugActivity"
+            android:exported="false"
+            android:enabled="false"
+            tools:ignore="DisabledBaseActivity">
+        </activity>
+        -->
+
+        <!-- 앱 컴포넌트 별칭 (추후 A/B 테스트용) -->
+        <!--
+        <activity-alias
+            android:name=".MainActivity-Default"
+            android:targetActivity=".MainActivity"
+            android:enabled="true"
+            android:exported="true">
+        </activity-alias>
+        -->
+
     </application>
+
+    <!-- ===== 쿼리 패키지 (Android 11+ 패키지 가시성) ===== -->
+    <queries>
+        <!-- 음악 앱들 -->
+        <package android:name="com.spotify.music" />
+        <package android:name="com.apple.android.music" />
+        <package android:name="com.google.android.apps.youtube.music" />
+        <package android:name="com.sec.android.app.music" />
+
+        <!-- 갤러리 앱들 -->
+        <package android:name="com.google.android.apps.photos" />
+        <package android:name="com.sec.android.gallery3d" />
+
+        <!-- 공유 인텐트 -->
+        <intent>
+            <action android:name="android.intent.action.SEND" />
+            <data android:mimeType="image/*" />
+        </intent>
+
+        <!-- 음악 플레이어 인텐트 -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+    </queries>
+
+    <!-- ===== 보안 설정 ===== -->
+    <!-- 네트워크 보안: network_security_config.xml에서 관리 -->
+    <!-- 앱 백업: backup_rules.xml에서 관리 -->
+    <!-- 데이터 추출: data_extraction_rules.xml에서 관리 -->
 
 </manifest>

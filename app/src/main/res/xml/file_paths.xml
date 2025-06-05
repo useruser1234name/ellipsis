@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 내부 저장소 캐시 디렉토리 -->
+    <!-- Context.getCacheDir() 경로 -->
+    <cache-path name="image_cache" path="images/" />
+    <cache-path name="analysis_cache" path="analysis/" />
+    <cache-path name="temp_files" path="temp/" />
+
+    <!-- 내부 저장소 파일 디렉토리 -->
+    <!-- Context.getFilesDir() 경로 -->
+    <files-path name="internal_files" path="." />
+    <files-path name="memories" path="memories/" />
+    <files-path name="user_data" path="user/" />
+    <files-path name="exported_files" path="export/" />
+
+    <!-- 외부 저장소 캐시 디렉토리 (있는 경우만) -->
+    <!-- Context.getExternalCacheDir() 경로 -->
+    <external-cache-path name="external_cache" path="." />
+    <external-cache-path name="shared_images" path="shared/" />
+
+    <!-- 외부 저장소 파일 디렉토리 -->
+    <!-- Context.getExternalFilesDir(null) 경로 -->
+    <external-files-path name="external_files" path="." />
+    <external-files-path name="downloads" path="Downloads/" />
+    <external-files-path name="pictures" path="Pictures/" />
+    <external-files-path name="music_exports" path="Music/" />
+
+    <!-- 미디어 저장소 (Android 10+) -->
+    <!-- MediaStore 접근용 -->
+    <external-media-path name="external_media" path="." />
+
+    <!-- 외부 저장소 루트 (필요한 경우만, 권한 주의) -->
+    <!-- Environment.getExternalStorageDirectory() 경로 -->
+    <!-- <external-path name="external_storage" path="." /> -->
+
+</paths>

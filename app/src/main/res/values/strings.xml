@@ -1,3 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- 앱 기본 정보 -->
     <string name="app_name">ellipsis</string>
+    <string name="app_tagline">memories become melodies</string>
+
+    <!-- 메인 화면 -->
+    <string name="main_title">봄날 음악 추천 (ML Kit)</string>
+    <string name="select_photo">사진 선택</string>
+    <string name="analyze_and_recommend">객체 인식 및 음악 추천</string>
+    <string name="hashtag_input_hint">감정을 태그로 남겨보세요</string>
+    <string name="hashtag_placeholder">#그리움 #평온</string>
+
+    <!-- 권한 관련 -->
+    <string name="permission_required_title">권한 허용 필요</string>
+    <string name="permission_settings_title">권한 설정 필요</string>
+    <string name="permission_description">더 나은 음악 추천을 위해 권한이 필요합니다.\n\n• 사진: 이미지 분석으로 감정 파악\n• 위치: 장소 기반 추천 개선</string>
+    <string name="permission_settings_description">앱 설정에서 사진 및 위치 권한을 허용해주세요.\n\n• 사진: 음악 추천을 위한 이미지 분석\n• 위치: 촬영 장소 기반 감정 분석</string>
+    <string name="permission_allow">권한 허용</string>
+    <string name="permission_open_settings">설정 열기</string>
+    <string name="permission_later">나중에</string>
+
+    <!-- 정보 표시 -->
+    <string name="photo_time_label">촬영 시간</string>
+    <string name="photo_location_label">촬영 위치</string>
+    <string name="detected_objects_label">인식된 객체</string>
+    <string name="recommended_music_label">추천 음악</string>
+    <string name="melody_connected">선율이 연결되었습니다</string>
+
+    <!-- 로딩 및 상태 -->
+    <string name="loading">로딩 중...</string>
+    <string name="analyzing_image">이미지 분석 중...</string>
+    <string name="connecting_melody">선율로 연결하기</string>
+
+    <!-- 에러 메시지 -->
+    <string name="error_image_load">이미지를 불러올 수 없습니다</string>
+    <string name="error_image_process">이미지 처리 실패</string>
+    <string name="error_music_recommendation">음악 추천 실패</string>
+    <string name="error_server_connection">서버 연결 실패</string>
+    <string name="error_network">네트워크 오류가 발생했습니다</string>
+
+    <!-- 성공 메시지 -->
+    <string name="success_image_loaded">사진을 불러왔습니다. 음악 추천을 요청해보세요!</string>
+    <string name="success_analysis_complete">사진 분석이 완료되었습니다</string>
+
+    <!-- 메모리/기억 관련 -->
+    <string name="memory_diary">Memory Diary</string>
+    <string name="coming_soon">Coming Soon...</string>
+    <string name="first_memory_message">첫 번째 기억을\n점으로 찍어보세요</string>
+    <string name="add_more_memories">더 많은 기억 추가하기</string>
+
+    <!-- 설정 관련 -->
+    <string name="settings">설정</string>
+    <string name="theme">테마</string>
+    <string name="theme_auto">자동</string>
+    <string name="theme_light">라이트 모드</string>
+    <string name="theme_dark">다크 모드</string>
+
+    <!-- 일반 버튼 -->
+    <string name="ok">확인</string>
+    <string name="cancel">취소</string>
+    <string name="retry">다시 시도</string>
+    <string name="close">닫기</string>
+
+    <!-- 공유 관련 -->
+    <string name="share_music">음악 공유</string>
+    <string name="share_memory">기억 공유</string>
+
+    <!-- 접근성 -->
+    <string name="content_description_selected_image">선택된 이미지</string>
+    <string name="content_description_logo">ellipsis 로고</string>
+    <string name="content_description_music_note">음표</string>
 </resources>

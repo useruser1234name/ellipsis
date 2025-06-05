@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- 기본 설정: HTTPS 강제 -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <!-- 시스템 인증서 신뢰 -->
+            <certificates src="system"/>
+            <!-- 사용자 인증서 신뢰 (디버그용) -->
+            <certificates src="user"
+                tools:ignore="AcceptsUserCertificates"
+                xmlns:tools="http://schemas.android.com/tools"/>
+        </trust-anchors>
+    </base-config>
+
+    <!-- 디버그 빌드: 개발 서버 예외 처리 -->
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="system"/>
+            <certificates src="user"/>
+        </trust-anchors>
+    </debug-overrides>
+
+    <!-- 개발 서버 도메인 예외 (HTTP 허용) -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">192.168.219.107</domain>
+        <domain includeSubdomains="false">10.0.2.2</domain> <!-- 에뮬레이터용 -->
+        <domain includeSubdomains="false">localhost</domain>
+        <domain includeSubdomains="false">127.0.0.1</domain>
+        <domain includeSubdomains="true">ngrok.io</domain> <!-- ngrok 터널용 -->
+        <domain includeSubdomains="true">ngrok.app</domain>
+    </domain-config>
+
+    <!-- 프로덕션 서버: HTTPS 강제 + 인증서 고정 -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">ellipsis.music</domain>
+        <domain includeSubdomains="true">api.ellipsis.music</domain>
+        <domain includeSubdomains="true">cdn.ellipsis.music</domain>
+
+        <!-- 인증서 고정 (프로덕션에서 활성화) -->
+        <!--
+        <pin-set expiration="2026-06-01">
+            <pin digest="SHA-256">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</pin>
+            <pin digest="SHA-256">BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=</pin>
+        </pin-set>
+        -->
+
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </domain-config>
+
+    <!-- 외부 서비스 도메인들 -->
+    <domain-config cleartextTrafficPermitted="false">
+        <!-- Spotify API -->
+        <domain includeSubdomains="true">open.spotify.com</domain>
+        <domain includeSubdomains="true">api.spotify.com</domain>
+
+        <!-- Apple Music -->
+        <domain includeSubdomains="true">music.apple.com</domain>
+        <domain includeSubdomains="true">itunes.apple.com</domain>
+
+        <!-- YouTube Music -->
+        <domain includeSubdomains="true">music.youtube.com</domain>
+        <domain includeSubdomains="true">youtubei.googleapis.com</domain>
+
+        <!-- 이미지 CDN들 -->
+        <domain includeSubdomains="true">i.scdn.co</domain> <!-- Spotify 이미지 -->
+        <domain includeSubdomains="true">is1-ssl.mzstatic.com</domain> <!-- Apple 이미지 -->
+        <domain includeSubdomains="true">lh3.googleusercontent.com</domain> <!-- Google 이미지 -->
+
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </domain-config>
+
+    <!-- Google 서비스들 (ML Kit 등) -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">googleapis.com</domain>
+        <domain includeSubdomains="true">google.com</domain>
+        <domain includeSubdomains="true">gstatic.com</domain>
+        <domain includeSubdomains="true">googleapi.com</domain>
+
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </domain-config>
+
+</network-security-config>

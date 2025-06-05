@@ -1,13 +1,117 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample backup rules file; uncomment and customize as necessary.
-   See https://developer.android.com/guide/topics/data/autobackup
-   for details.
-   Note: This file is ignored for devices older than API 31
-   See https://developer.android.com/about/versions/12/backup-restore
--->
+<?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
-    <!--
-   <include domain="sharedpref" path="."/>
-   <exclude domain="sharedpref" path="device.xml"/>
--->
+
+    <!-- ===== 백업 포함 항목들 ===== -->
+
+    <!-- 사용자 설정 백업 -->
+    <include
+        domain="sharedpref"
+        path="user_preferences.xml" />
+
+    <!-- 메모리(기억) 메타데이터 백업 -->
+    <include
+        domain="sharedpref"
+        path="memories.xml" />
+
+    <!-- 앱 설정 백업 -->
+    <include
+        domain="sharedpref"
+        path="app_settings.xml" />
+
+    <!-- DataStore 백업 -->
+    <include
+        domain="file"
+        path="datastore/" />
+
+    <!-- 사용자 생성 콘텐츠 백업 -->
+    <include
+        domain="file"
+        path="memories/" />
+
+    <!-- 내보내기 파일들 백업 -->
+    <include
+        domain="file"
+        path="export/" />
+
+    <!-- ===== 백업 제외 항목들 ===== -->
+
+    <!-- 캐시 파일들 제외 -->
+    <exclude
+        domain="file"
+        path="cache/" />
+
+    <!-- 임시 파일들 제외 -->
+    <exclude
+        domain="file"
+        path="temp/" />
+
+    <!-- 분석 캐시 제외 -->
+    <exclude
+        domain="file"
+        path="analysis/" />
+
+    <!-- 이미지 캐시 제외 -->
+    <exclude
+        domain="file"
+        path="images/" />
+
+    <!-- 네트워크 캐시 제외 -->
+    <exclude
+        domain="cache"
+        path="http_cache/" />
+
+    <!-- 로그 파일들 제외 -->
+    <exclude
+        domain="file"
+        path="logs/" />
+
+    <!-- 개발용 파일들 제외 -->
+    <exclude
+        domain="file"
+        path="debug/" />
+
+    <!-- 민감한 정보 제외 -->
+    <exclude
+        domain="sharedpref"
+        path="sensitive_data.xml" />
+
+    <!-- API 키 등 보안 정보 제외 -->
+    <exclude
+        domain="sharedpref"
+        path="api_keys.xml" />
+
+    <!-- 세션 정보 제외 -->
+    <exclude
+        domain="sharedpref"
+        path="session_data.xml" />
+
+    <!-- 사용자 인증 토큰 제외 -->
+    <exclude
+        domain="sharedpref"
+        path="auth_tokens.xml" />
+
+    <!-- 임시 업로드 파일들 제외 -->
+    <exclude
+        domain="file"
+        path="upload_temp/" />
+
+    <!-- WebView 데이터 제외 -->
+    <exclude
+        domain="file"
+        path="webview/" />
+
+    <!-- 데이터베이스 WAL 파일들 제외 -->
+    <exclude
+        domain="database"
+        path="*-wal" />
+
+    <exclude
+        domain="database"
+        path="*-shm" />
+
+    <!-- 외부 저장소는 일반적으로 백업에서 제외 -->
+    <exclude
+        domain="external"
+        path="." />
+
 </full-backup-content>

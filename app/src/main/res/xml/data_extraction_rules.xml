@@ -1,19 +1,210 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample data extraction rules file; uncomment and customize as necessary.
-   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
-   for details.
--->
+<?xml version="1.0" encoding="utf-8"?>
 <data-extraction-rules>
+
+    <!-- ===== Cloud Backup 규칙 ===== -->
     <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
+
+        <!-- 클라우드 백업 포함 항목들 -->
+        <include
+            domain="sharedpref"
+            path="user_preferences.xml" />
+
+        <include
+            domain="sharedpref"
+            path="memories.xml" />
+
+        <include
+            domain="sharedpref"
+            path="app_settings.xml" />
+
+        <!-- DataStore 파일들 -->
+        <include
+            domain="file"
+            path="datastore/" />
+
+        <!-- 메모리 메타데이터만 백업 (실제 이미지 제외) -->
+        <include
+            domain="file"
+            path="memories/" />
+
+        <!-- 사용자 설정 및 내보내기 파일들 -->
+        <include
+            domain="file"
+            path="export/" />
+
+        <!-- 클라우드 백업 제외 항목들 -->
+
+        <!-- 모든 캐시 파일들 제외 -->
+        <exclude
+            domain="cache"
+            path="." />
+
+        <!-- 이미지 캐시 제외 -->
+        <exclude
+            domain="file"
+            path="cache/" />
+
+        <exclude
+            domain="file"
+            path="images/" />
+
+        <!-- 임시 파일들 제외 -->
+        <exclude
+            domain="file"
+            path="temp/" />
+
+        <!-- 분석 캐시 제외 -->
+        <exclude
+            domain="file"
+            path="analysis/" />
+
+        <!-- 보안 민감 정보 제외 -->
+        <exclude
+            domain="sharedpref"
+            path="sensitive_data.xml" />
+
+        <exclude
+            domain="sharedpref"
+            path="api_keys.xml" />
+
+        <exclude
+            domain="sharedpref"
+            path="auth_tokens.xml" />
+
+        <!-- 세션 데이터 제외 -->
+        <exclude
+            domain="sharedpref"
+            path="session_data.xml" />
+
+        <!-- 로그 파일들 제외 -->
+        <exclude
+            domain="file"
+            path="logs/" />
+
+        <!-- 개발용 데이터 제외 -->
+        <exclude
+            domain="file"
+            path="debug/" />
+
+        <!-- 데이터베이스 임시 파일들 제외 -->
+        <exclude
+            domain="database"
+            path="*-wal" />
+
+        <exclude
+            domain="database"
+            path="*-shm" />
+
+        <!-- 외부 저장소 제외 -->
+        <exclude
+            domain="external"
+            path="." />
+
     </cloud-backup>
-    <!--
+
+    <!-- ===== Device Transfer 규칙 ===== -->
     <device-transfer>
-        <include .../>
-        <exclude .../>
+
+        <!-- 기기 간 전송 포함 항목들 -->
+        <include
+            domain="sharedpref"
+            path="user_preferences.xml" />
+
+        <include
+            domain="sharedpref"
+            path="memories.xml" />
+
+        <include
+            domain="sharedpref"
+            path="app_settings.xml" />
+
+        <!-- DataStore 설정들 -->
+        <include
+            domain="file"
+            path="datastore/" />
+
+        <!-- 사용자 메모리들 (썸네일 포함) -->
+        <include
+            domain="file"
+            path="memories/" />
+
+        <!-- 내보내기 파일들 -->
+        <include
+            domain="file"
+            path="export/" />
+
+        <!-- 데이터베이스 (있는 경우) -->
+        <include
+            domain="database"
+            path="app_database.db" />
+
+        <!-- 기기 전송 제외 항목들 -->
+
+        <!-- 캐시 파일들 제외 -->
+        <exclude
+            domain="cache"
+            path="." />
+
+        <exclude
+            domain="file"
+            path="cache/" />
+
+        <!-- 임시 파일들 제외 -->
+        <exclude
+            domain="file"
+            path="temp/" />
+
+        <!-- 분석 캐시 제외 -->
+        <exclude
+            domain="file"
+            path="analysis/" />
+
+        <!-- 이미지 캐시 제외 (원본은 포함) -->
+        <exclude
+            domain="file"
+            path="images/cache/" />
+
+        <!-- 보안 정보는 전송하지 않음 -->
+        <exclude
+            domain="sharedpref"
+            path="sensitive_data.xml" />
+
+        <exclude
+            domain="sharedpref"
+            path="api_keys.xml" />
+
+        <!-- 세션별 데이터 제외 -->
+        <exclude
+            domain="sharedpref"
+            path="session_data.xml" />
+
+        <exclude
+            domain="sharedpref"
+            path="auth_tokens.xml" />
+
+        <!-- 로그 및 디버그 데이터 제외 -->
+        <exclude
+            domain="file"
+            path="logs/" />
+
+        <exclude
+            domain="file"
+            path="debug/" />
+
+        <!-- 데이터베이스 임시 파일들 제외 -->
+        <exclude
+            domain="database"
+            path="*-wal" />
+
+        <exclude
+            domain="database"
+            path="*-shm" />
+
+        <!-- 외부 저장소 제외 -->
+        <exclude
+            domain="external"
+            path="." />
+
     </device-transfer>
-    -->
+
 </data-extraction-rules>

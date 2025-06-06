@@ -217,6 +217,7 @@ private fun MainScreenContent(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .imePadding()
             .background(
                 Brush.radialGradient(
                     colors = listOf(
@@ -237,7 +238,9 @@ private fun MainScreenContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(scrollState),
+                .verticalScroll(scrollState)
+                .imePadding()
+                .windowInsetsPadding(WindowInsets.ime),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(60.dp))

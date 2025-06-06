@@ -20,11 +20,14 @@ import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
@@ -37,12 +40,11 @@ import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
- * 사진 기억 시각화 메인 컴포넌트
+ * 사진 기억 시각화 메인 컴포넌트 - IME 문제 완전 해결 버전
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -60,6 +62,7 @@ fun PhotoMemoryVisualization(
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .heightIn(max = 800.dp) // 최대 높이 제한
             .padding(horizontal = 24.dp)
             .shadow(
                 elevation = 16.dp,
@@ -73,7 +76,8 @@ fun PhotoMemoryVisualization(
     ) {
         Column(
             modifier = Modifier
-                .imePadding()
+                .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.ime) // IME 패딩
                 .padding(24.dp)
         ) {
             // 메모리 점들 시각화
@@ -90,18 +94,13 @@ fun PhotoMemoryVisualization(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // 감정 해시태그 입력
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .imePadding()
-            ) {
-                EmotionalHashtagInput(
-                    hashtags = hashtags,
-                    onHashtagsChange = onHashtagsChange,
-                    primaryColor = themeColors.primary
-                )
-            }
+            // 감정 해시태그 입력 - 개선된 IME 처리
+            EmotionalHashtagInput(
+                hashtags = hashtags,
+                onHashtagsChange = onHashtagsChange,
+                primaryColor = themeColors.primary,
+//                scrollState = scrollState
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -144,6 +143,101 @@ fun PhotoMemoryVisualization(
                 primaryColor = themeColors.primary
             )
         }
+    }
+}
+
+/**
+ * 감정 해시태그 입력 필드 - 완전한 IME 처리
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun EmotionalHashtagInput(
+    hashtags: TextFieldValue,
+    onHashtagsChange: (TextFieldValue) -> Unit,
+    primaryColor: Color
+) {
+    val bringIntoViewRequester = remember { BringIntoViewRequester() }
+    val focusRequester = remember { FocusRequester() }
+    val scope = rememberCoroutineScope()
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    // 키보드 상태 감지
+    val imeInsets = WindowInsets.ime
+    val isKeyboardVisible = imeInsets.getBottom(LocalDensity.current) > 0
+
+    // 포커스 상태 추적
+    var isFocused by remember { mutableStateOf(false) }
+
+    // 키보드가 올라올 때 자동으로 스크롤
+    LaunchedEffect(isKeyboardVisible, isFocused) {
+        if (isKeyboardVisible && isFocused) {
+            delay(250) // 키보드 애니메이션 대기
+            bringIntoViewRequester.bringIntoView()
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .bringIntoViewRequester(bringIntoViewRequester)
+    ) {
+        OutlinedTextField(
+            value = hashtags,
+            onValueChange = onHashtagsChange,
+            placeholder = {
+                Text(
+                    "감정을 태그로 남겨보세요... #그리움 #평온",
+                    color = primaryColor.copy(alpha = 0.5f),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Light
+                )
+            },
+            leadingIcon = {
+                Icon(
+                    Icons.Default.ModeEdit,
+                    contentDescription = null,
+                    tint = primaryColor.copy(alpha = 0.6f),
+                    modifier = Modifier.size(18.dp)
+                )
+            },
+            trailingIcon = if (isKeyboardVisible) {
+                {
+                    IconButton(
+                        onClick = {
+                            keyboardController?.hide()
+                        }
+                    ) {
+                        Icon(
+                            Icons.Default.KeyboardArrowDown,
+                            contentDescription = "키보드 닫기",
+                            tint = primaryColor.copy(alpha = 0.6f),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            } else null,
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(focusRequester)
+                .onFocusChanged { focusState ->
+                    isFocused = focusState.isFocused
+                    if (focusState.isFocused) {
+                        scope.launch {
+                            delay(200)
+                            bringIntoViewRequester.bringIntoView()
+                        }
+                    }
+                },
+            shape = RoundedCornerShape(20.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = primaryColor.copy(alpha = 0.6f),
+                unfocusedBorderColor = primaryColor.copy(alpha = 0.2f),
+                cursorColor = primaryColor,
+                focusedTextColor = primaryColor
+            ),
+            singleLine = true,
+            enabled = true
+        )
     }
 }
 
@@ -248,64 +342,6 @@ private fun MemoryDotsHeader(count: Int, primaryColor: Color) {
             )
         }
     }
-}
-
-/**
- * 감정 해시태그 입력 필드
- */
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun EmotionalHashtagInput(
-    hashtags: TextFieldValue,
-    onHashtagsChange: (TextFieldValue) -> Unit,
-    primaryColor: Color
-) {
-    val bringIntoViewRequester = remember { BringIntoViewRequester() }
-    val focusRequester = remember { FocusRequester() }
-    val scope = rememberCoroutineScope()
-
-    OutlinedTextField(
-        value = hashtags,
-        onValueChange = onHashtagsChange,
-        placeholder = {
-            Text(
-                "감정을 태그로 남겨보세요... #그리움 #평온",
-                color = primaryColor.copy(alpha = 0.5f),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Light
-            )
-        },
-        leadingIcon = {
-            Icon(
-                Icons.Default.ModeEdit,
-                contentDescription = null,
-                tint = primaryColor.copy(alpha = 0.6f),
-                modifier = Modifier.size(18.dp)
-            )
-        },
-        modifier = Modifier
-            .fillMaxWidth()
-            .focusRequester(focusRequester)
-            .imePadding()
-            .bringIntoViewRequester(bringIntoViewRequester)
-            .onFocusChanged { focusState ->
-                if (focusState.isFocused) {
-                    scope.launch {
-                        delay(500)
-                        bringIntoViewRequester.bringIntoView()
-                    }
-                }
-            },
-        shape = RoundedCornerShape(20.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = primaryColor.copy(alpha = 0.6f),
-            unfocusedBorderColor = primaryColor.copy(alpha = 0.2f),
-            cursorColor = primaryColor,
-            focusedTextColor = primaryColor
-        ),
-        singleLine = true,
-        enabled = true
-    )
 }
 
 /**

@@ -99,8 +99,6 @@ class MainViewModel @Inject constructor(private val api: GPTApiService) : ViewMo
             ExifInterface.TAG_ARTIST,                  // 작가/사진가
             ExifInterface.TAG_COPYRIGHT,               // 저작권
 
-            ExifInterface.TAG_SOFTWARE,                // 소프트웨어 정보
-
             // === 이미지 기본 정보 ===
             ExifInterface.TAG_IMAGE_WIDTH,             // 이미지 너비
             ExifInterface.TAG_IMAGE_LENGTH,            // 이미지 높이
@@ -215,7 +213,6 @@ class MainViewModel @Inject constructor(private val api: GPTApiService) : ViewMo
             ExifInterface.TAG_THUMBNAIL_IMAGE_LENGTH,  // 썸네일 이미지 길이
             ExifInterface.TAG_THUMBNAIL_IMAGE_WIDTH,   // 썸네일 이미지 너비
 
-
             // === 기타 메타데이터 ===
             ExifInterface.TAG_EXIF_VERSION,            // EXIF 버전
             ExifInterface.TAG_COMPONENTS_CONFIGURATION, // 구성 요소 구성
@@ -317,7 +314,6 @@ class MainViewModel @Inject constructor(private val api: GPTApiService) : ViewMo
     fun recommendMusic(context: Context, uris: List<Uri>, hashtags: String) {
         if (uris.isEmpty()) return
 
-
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(
@@ -349,7 +345,7 @@ class MainViewModel @Inject constructor(private val api: GPTApiService) : ViewMo
                 // 🎯 완전한 EXIF 데이터 추출 (첫 번째 이미지)
                 processCompleteExifData(uris.first(), context)
 
-                // 서버에 음악 추천 요청 (완전한 EXIF 포함)
+                // 서버에 음악 추천 요청
                 val response = requestMusicRecommendation(uris.first(), context, hashtags, detectedObjects)
 
                 // 서버 응답으로부터 UI 업데이트
@@ -374,7 +370,7 @@ class MainViewModel @Inject constructor(private val api: GPTApiService) : ViewMo
                     errorMessage = errorMsg,
                     currentStep = ProcessingStep.ERROR
                 )
-                Timber.e(e, "❌ 음악 추천 실패")
+                Timber.e(e, "음악 추천 실패")
             }
         }
     }
@@ -421,15 +417,13 @@ class MainViewModel @Inject constructor(private val api: GPTApiService) : ViewMo
 
     // =============== Private Helper Functions ===============
 
-    // MainViewModel.kt의 processCompleteExifData 함수 수정
-
     /**
-     * 🎯 완전한 EXIF 데이터 추출 (프라이버시 필터링 포함)
+     *  완전한 EXIF 데이터 추출 (프라이버시 필터링 포함)
      */
     private suspend fun processCompleteExifData(uri: Uri, context: Context) {
         withContext(Dispatchers.IO) {
             try {
-                Timber.i("🔍 완전한 EXIF 데이터 추출 시작...")
+                Timber.i("완전한 EXIF 데이터 추출 시작...")
                 val startTime = System.currentTimeMillis()
 
                 context.contentResolver.openInputStream(uri)?.use { inputStream ->
@@ -438,7 +432,7 @@ class MainViewModel @Inject constructor(private val api: GPTApiService) : ViewMo
 
                     // 모든 EXIF 태그 가져오기
                     val allTags = getAllExifTags()
-                    Timber.i("📸 ${allTags.size}개의 EXIF 태그 발견")
+                    Timber.i("${allTags.size}개의 EXIF 태그 발견")
 
                     // 프라이버시 필터링 옵션 (사용자 설정에 따라)
                     val privacyLevel = getPrivacyLevel() // "none", "basic", "strict"
@@ -449,7 +443,7 @@ class MainViewModel @Inject constructor(private val api: GPTApiService) : ViewMo
                         else -> allTags
                     }
 
-                    Timber.i("🛡️ 프라이버시 필터링($privacyLevel): ${allTags.size}개 → ${filteredTags.size}개 태그")
+                    Timber.i("프라이버시 필터링($privacyLevel): ${allTags.size}개 → ${filteredTags.size}개 태그")
 
                     var extractedCount = 0
                     var totalSize = 0
@@ -579,21 +573,21 @@ class MainViewModel @Inject constructor(private val api: GPTApiService) : ViewMo
                     )
 
                     // 추출된 데이터 통계 로깅
-                    Timber.i(" EXIF 추출 완료:")
-                    Timber.i(" 전체 태그: ${allTags.size}개")
-                    Timber.i(" 필터링 후: ${filteredTags.size}개 (${filteredCount}개 제외)")
-                    Timber.i(" 추출 성공: ${extractedCount}개 (성공률: ${(extractedCount.toFloat() / filteredTags.size * 100).toInt()}%)")
-                    Timber.i(" 데이터 크기: ${totalSize}자, JSON: ${exifJsonString.length}자")
-                    Timber.i(" 처리 시간: ${processingTime}ms")
-                    Timber.i(" 프라이버시: $privacyLevel 모드")
+                    Timber.i("📊 EXIF 추출 완료:")
+                    Timber.i("  • 전체 태그: ${allTags.size}개")
+                    Timber.i("  • 필터링 후: ${filteredTags.size}개 (${filteredCount}개 제외)")
+                    Timber.i("  • 추출 성공: ${extractedCount}개 (성공률: ${(extractedCount.toFloat() / filteredTags.size * 100).toInt()}%)")
+                    Timber.i("  • 데이터 크기: ${totalSize}자, JSON: ${exifJsonString.length}자")
+                    Timber.i("  • 처리 시간: ${processingTime}ms")
+                    Timber.i("  • 프라이버시: $privacyLevel 모드")
 
                     // 중요한 메타데이터 로깅
                     logImportantMetadata(JSONObject(exifMap))
 
-                    Timber.d(" 프라이버시 필터링된 EXIF 처리 완료")
+                    Timber.d("🔒 프라이버시 필터링된 EXIF 처리 완료")
 
                 } ?: run {
-                    Timber.w(" 이미지 스트림 열기 실패")
+                    Timber.w("⚠️ 이미지 스트림 열기 실패")
                     _uiState.value = _uiState.value.copy(
                         exifJson = "{\"error\": \"이미지 스트림 열기 실패\"}"
                     )
@@ -627,7 +621,6 @@ class MainViewModel @Inject constructor(private val api: GPTApiService) : ViewMo
             ExifInterface.TAG_LENS_SERIAL_NUMBER,     // 렌즈 시리얼 번호
             ExifInterface.TAG_COPYRIGHT,              // 저작권 정보
             ExifInterface.TAG_ARTIST,                 // 작가 정보
-//            ExifInterface.TAG_HOST_COMPUTER,          // 호스트 컴퓨터
             ExifInterface.TAG_SOFTWARE,               // 소프트웨어 정보 (일부)
             ExifInterface.TAG_IMAGE_UNIQUE_ID,        // 이미지 고유 ID
             ExifInterface.TAG_USER_COMMENT,           // 사용자 코멘트
@@ -657,25 +650,6 @@ class MainViewModel @Inject constructor(private val api: GPTApiService) : ViewMo
                     && !tag.contains("Artist", ignoreCase = true)
                     && !tag.contains("Software", ignoreCase = true)
                     && !tag.contains("Computer", ignoreCase = true)
-        }
-    }
-
-    /**
-     * 프라이버시 필터링 통계
-     */
-    private fun logPrivacyFilteringStats(allTags: List<String>, filteredTags: List<String>, privacyLevel: String) {
-        val removedCount = allTags.size - filteredTags.size
-        val removedTags = allTags - filteredTags.toSet()
-
-        Timber.i("🛡️ 프라이버시 필터링 통계 ($privacyLevel):")
-        Timber.i("  • 전체 태그: ${allTags.size}개")
-        Timber.i("  • 허용된 태그: ${filteredTags.size}개")
-        Timber.i("  • 제외된 태그: ${removedCount}개")
-
-        if (removedCount > 0 && removedCount <= 10) {
-            Timber.d("  • 제외된 태그들: ${removedTags.joinToString(", ")}")
-        } else if (removedCount > 10) {
-            Timber.d("  • 제외된 태그들 (일부): ${removedTags.take(10).joinToString(", ")}... (+${removedCount-10}개)")
         }
     }
 
@@ -773,7 +747,7 @@ class MainViewModel @Inject constructor(private val api: GPTApiService) : ViewMo
     }
 
     /**
-     * 🎯 서버 요청 - 완전한 EXIF 데이터 전송
+     * 🎯 서버 요청 - 새로운 단순화된 API에 맞게 수정
      */
     private suspend fun requestMusicRecommendation(
         uri: Uri,
@@ -784,26 +758,25 @@ class MainViewModel @Inject constructor(private val api: GPTApiService) : ViewMo
         val fileBytes = context.contentResolver.openInputStream(uri)?.readBytes()
             ?: throw IllegalStateException("파일을 읽을 수 없습니다")
 
+        // 단일 이미지 파트 생성 (새 API는 image 파라미터 하나만 받음)
         val fileBody = fileBytes.toRequestBody("image/*".toMediaTypeOrNull())
-        val filePart = MultipartBody.Part.createFormData("files", "image.jpg", fileBody)
+        val imagePart = MultipartBody.Part.createFormData("image", "image.jpg", fileBody)
 
         val currentExifJson = _uiState.value.exifJson
 
-        Timber.d("🎵 음악 추천 요청 (완전한 EXIF 포함):\n" +
+        Timber.d("🎵 음악 추천 요청 (단순화된 API):\n" +
                 "hashtags = $hashtags\n" +
                 "objects = ${detectedObjects.joinToString(",")}\n" +
                 "location = ${_uiState.value.locationName}\n" +
                 "exif_size = ${currentExifJson.length}자")
 
-        // 🎯 서버로 모든 EXIF 데이터 전송
+        // 🎯 새로운 단순화된 API 호출 (직접 RequestBody 생성)
         api.recommendMusic(
-            files = listOf(filePart),
+            image = imagePart,
             hashtags = hashtags.toRequestBody("text/plain".toMediaTypeOrNull()),
-            exifData = currentExifJson.toRequestBody("application/json".toMediaTypeOrNull()), // 완전한 EXIF 데이터
-            cameraInfo = detectedObjects.joinToString(",").toRequestBody("text/plain".toMediaTypeOrNull()),
-            latitude = _uiState.value.latitude?.toString()?.toRequestBody("text/plain".toMediaTypeOrNull()),
-            longitude = _uiState.value.longitude?.toString()?.toRequestBody("text/plain".toMediaTypeOrNull()),
-            datetime = _uiState.value.photoDate.takeIf { it.isNotBlank() }?.toRequestBody("text/plain".toMediaTypeOrNull())
+            culturalContext = "korean".toRequestBody("text/plain".toMediaTypeOrNull()),
+            maxSongs = "8".toRequestBody("text/plain".toMediaTypeOrNull()),
+            facialAnalysisWeight = "0.6".toRequestBody("text/plain".toMediaTypeOrNull())
         )
     }
 

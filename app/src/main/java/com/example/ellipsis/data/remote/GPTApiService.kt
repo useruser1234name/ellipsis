@@ -11,97 +11,50 @@ import retrofit2.http.*
 interface GPTApiService {
 
     /**
-     * 감정 기반 음악 추천 API
-     * 서버에서 이미지 분석, 감정 분석, 색상 추출, 음악 추천을 모두 처리
+     * 실제 서버 API에 맞는 음악 추천
+     * 서버가 실제로 받는 파라미터만 사용
      */
     @Multipart
     @POST("recommend-music")
     suspend fun recommendMusic(
-        // 필수 파라미터들
-        @Part files: List<MultipartBody.Part>, // 이미지 파일들
-        @Part("hashtags") hashtags: RequestBody, // 사용자 해시태그
-
-        // 카메라/이미지 정보
-        @Part("exif_data") exifData: RequestBody = "{}".toRequestBody("application/json".toMediaTypeOrNull()),
-        @Part("camera_info") cameraInfo: RequestBody = "".toRequestBody("text/plain".toMediaTypeOrNull()),
-
-        // 위치 정보
-        @Part("latitude") latitude: RequestBody? = null,
-        @Part("longitude") longitude: RequestBody? = null,
-        @Part("altitude") altitude: RequestBody? = null,
-        @Part("location_source") locationSource: RequestBody = "gps".toRequestBody("text/plain".toMediaTypeOrNull()),
-
-        // 시간 정보
-        @Part("datetime") datetime: RequestBody? = null,
-        @Part("timezone") timezone: RequestBody? = null,
-
-        // 분석 옵션들
-        @Part("analysis_depth") analysisDepth: RequestBody = "standard".toRequestBody("text/plain".toMediaTypeOrNull()), // standard, deep, quick
-        @Part("color_analysis") colorAnalysis: RequestBody = "true".toRequestBody("text/plain".toMediaTypeOrNull()),
-        @Part("emotion_analysis") emotionAnalysis: RequestBody = "true".toRequestBody("text/plain".toMediaTypeOrNull()),
-        @Part("object_detection") objectDetection: RequestBody = "true".toRequestBody("text/plain".toMediaTypeOrNull()),
-        @Part("scene_analysis") sceneAnalysis: RequestBody = "true".toRequestBody("text/plain".toMediaTypeOrNull()),
-
-        // 음악 추천 설정
-        @Part("max_songs") maxSongs: RequestBody = "8".toRequestBody("text/plain".toMediaTypeOrNull()),
-        @Part("music_genres") musicGenres: RequestBody? = null, // 선호 장르 (쉼표 구분)
-        @Part("exclude_genres") excludeGenres: RequestBody? = null, // 제외 장르
-        @Part("language_preference") languagePreference: RequestBody = "korean,english".toRequestBody("text/plain".toMediaTypeOrNull()),
-        @Part("instrumental_only") instrumentalOnly: RequestBody = "false".toRequestBody("text/plain".toMediaTypeOrNull()),
-        @Part("mood_intensity") moodIntensity: RequestBody = "0.5".toRequestBody("text/plain".toMediaTypeOrNull()), // 0.0 ~ 1.0
-
-        // 시각적 요소 설정
-        @Part("visual_theme") visualTheme: RequestBody = "auto".toRequestBody("text/plain".toMediaTypeOrNull()), // auto, warm, cool, vibrant, muted
-        @Part("color_palette_size") colorPaletteSize: RequestBody = "5".toRequestBody("text/plain".toMediaTypeOrNull()),
-        @Part("animation_style") animationStyle: RequestBody = "flowing".toRequestBody("text/plain".toMediaTypeOrNull()), // flowing, pulse, wave, static
-
-        // 문화적 맥락
-        @Part("cultural_context") culturalContext: RequestBody = "korean".toRequestBody("text/plain".toMediaTypeOrNull()),
-        @Part("seasonal_preference") seasonalPreference: RequestBody = "auto".toRequestBody("text/plain".toMediaTypeOrNull()), // auto, spring, summer, fall, winter
-
-        // 메타 정보
-        @Part("image_count") imageCount: RequestBody = "1".toRequestBody("text/plain".toMediaTypeOrNull()),
-        @Part("total_file_size") totalFileSize: RequestBody = "0".toRequestBody("text/plain".toMediaTypeOrNull()),
-        @Part("app_version") appVersion: RequestBody = "1.0.0".toRequestBody("text/plain".toMediaTypeOrNull()),
-        @Part("device_model") deviceModel: RequestBody? = null,
-        @Part("android_version") androidVersion: RequestBody? = null,
-        @Part("additional_context") additionalContext: RequestBody? = null,
-
-        // 사용자 설정
-        @Part("user_id") userId: RequestBody? = null, // 개인화 추천용
-        @Part("session_id") sessionId: RequestBody? = null, // 세션 추적용
-        @Part("previous_emotions") previousEmotions: RequestBody? = null // 이전 감정 이력 (JSON)
+        @Part image: MultipartBody.Part,
+        @Part("hashtags") hashtags: RequestBody,
+        @Part("cultural_context") culturalContext: RequestBody,
+        @Part("max_songs") maxSongs: RequestBody,
+        @Part("facial_analysis_weight") facialAnalysisWeight: RequestBody
     ): MusicResponse
 
     /**
-     * 간단한 음악 추천 (빠른 처리용)
+     * 얼굴 분석만 수행 (테스트용)
      */
     @Multipart
-    @POST("recommend-music/quick")
-    suspend fun recommendMusicQuick(
-        @Part files: List<MultipartBody.Part>,
-        @Part("hashtags") hashtags: RequestBody,
-        @Part("max_songs") maxSongs: RequestBody = "5".toRequestBody("text/plain".toMediaTypeOrNull())
-    ): MusicResponse
+    @POST("analyze-face")
+    suspend fun analyzeFace(
+        @Part image: MultipartBody.Part
+    ): FaceAnalysisResponse
 
     /**
-     * 음악 추천 상태 확인 (비동기 처리용)
+     * 시스템 헬스 체크
      */
-    @GET("recommend-music/status/{requestId}")
-    suspend fun getMusicRecommendationStatus(
-        @Path("requestId") requestId: String
-    ): Response<MusicRecommendationStatus>
+    @GET("health")
+    suspend fun healthCheck(): HealthCheckResponse
 
     /**
-     * 추천 결과 가져오기 (비동기 처리용)
+     * 루트 엔드포인트
      */
-    @GET("recommend-music/result/{requestId}")
-    suspend fun getMusicRecommendationResult(
-        @Path("requestId") requestId: String
-    ): MusicResponse
+    @GET("/")
+    suspend fun getRoot(): RootResponse
 
     /**
-     * 사용자 피드백 전송
+     * 시스템 정보
+     */
+    @GET("info")
+    suspend fun getSystemInfo(): SystemInfoResponse
+
+    // =============== 추후 확장용 (현재 서버에서 지원하지 않음) ===============
+
+    /**
+     * 사용자 피드백 전송 (추후 구현)
      */
     @POST("feedback")
     suspend fun sendFeedback(
@@ -109,7 +62,7 @@ interface GPTApiService {
     ): Response<FeedbackResponse>
 
     /**
-     * 감정 히스토리 조회
+     * 감정 히스토리 조회 (추후 구현)
      */
     @GET("emotion-history/{userId}")
     suspend fun getEmotionHistory(
@@ -119,34 +72,70 @@ interface GPTApiService {
     ): Response<EmotionHistoryResponse>
 
     /**
-     * 개인화 설정 업데이트
+     * 개인화 설정 업데이트 (추후 구현)
      */
     @PUT("user-preferences/{userId}")
     suspend fun updateUserPreferences(
         @Path("userId") userId: String,
         @Body preferences: UserPreferences
     ): Response<Unit>
-
-    /**
-     * 시스템 헬스 체크
-     */
-    @GET("health")
-    suspend fun healthCheck(): Response<HealthCheckResponse>
 }
 
-// =============== Request/Response 데이터 클래스들 ===============
+// =============== Response 데이터 클래스들 ===============
 
 /**
- * 음악 추천 상태 (비동기 처리용)
+ * 헬스 체크 응답 (실제 서버 응답에 맞게 수정)
  */
-data class MusicRecommendationStatus(
-    val requestId: String,
-    val status: String, // pending, processing, completed, failed
-    val progress: Float, // 0.0 ~ 1.0
-    val estimatedTimeRemaining: Long? = null, // 예상 남은 시간 (ms)
-    val currentStep: String? = null, // 현재 처리 단계
-    val message: String? = null
+data class HealthCheckResponse(
+    val status: String,
+    val timestamp: Double,
+    val recommender_ready: Boolean
 )
+
+/**
+ * 루트 엔드포인트 응답
+ */
+data class RootResponse(
+    val message: String,
+    val version: String,
+    val features: List<String>,
+    val status: String,
+    val endpoints: Map<String, String>
+)
+
+/**
+ * 시스템 정보 응답
+ */
+data class SystemInfoResponse(
+    val system_status: String,
+    val supported_expressions: List<String>,
+    val cultural_contexts: List<String>,
+    val sample_tracks: Int,
+    val mediapipe_initialized: Boolean,
+    val privacy_features: List<String>,
+    val version: String
+)
+
+/**
+ * 얼굴 분석 응답
+ */
+data class FaceAnalysisResponse(
+    val success: Boolean,
+    val faces_detected: Int,
+    val face_confidence: Float,
+    val has_expression_analysis: Boolean,
+    val face_quality_score: Float? = null,
+    val processing_time_ms: Int,
+    val analyzer_initialized: Boolean,
+    val primary_expression: String? = null,
+    val expression_confidence: Float? = null,
+    val expression_probabilities: Map<String, Float>? = null,
+    val emotional_valence: Float? = null,
+    val emotional_arousal: Float? = null,
+    val error: String? = null
+)
+
+// =============== Request 데이터 클래스들 (추후 확장용) ===============
 
 /**
  * 사용자 피드백
@@ -246,27 +235,6 @@ data class NotificationSettings(
     val reminderTime: String? = null // HH:mm 형식
 )
 
-/**
- * 헬스 체크 응답
- */
-data class HealthCheckResponse(
-    val status: String, // healthy, degraded, unhealthy
-    val version: String,
-    val uptime: Long,
-    val services: Map<String, ServiceStatus>,
-    val lastUpdated: Long
-)
-
-/**
- * 서비스 상태
- */
-data class ServiceStatus(
-    val name: String,
-    val status: String, // online, offline, degraded
-    val responseTime: Long? = null,
-    val lastCheck: Long
-)
-
 // =============== Helper Extension Functions ===============
 
 /**
@@ -297,80 +265,171 @@ fun Boolean.toRequestBody(): RequestBody {
     return this.toString().toRequestBody("text/plain".toMediaTypeOrNull())
 }
 
-// =============== API 빌더 클래스 ===============
+// =============== 간단한 API 빌더 클래스 ===============
 
 /**
- * 음악 추천 요청을 쉽게 구성하는 빌더
+ * 실제 서버 API에 맞는 간단한 음악 추천 요청 빌더
  */
-class MusicRecommendationRequestBuilder {
-    private val parameters = mutableMapOf<String, RequestBody>()
-    private var files: List<MultipartBody.Part> = emptyList()
+class SimpleMusicRecommendationBuilder {
+    private var image: MultipartBody.Part? = null
     private var hashtags: String = ""
+    private var culturalContext: String = "korean"
+    private var maxSongs: Int = 8
+    private var facialAnalysisWeight: Float = 0.6f
 
-    fun setFiles(files: List<MultipartBody.Part>) = apply {
-        this.files = files
+    fun setImage(imagePart: MultipartBody.Part) = apply {
+        this.image = imagePart
     }
 
     fun setHashtags(hashtags: String) = apply {
         this.hashtags = hashtags
     }
 
-    fun setAnalysisDepth(depth: String) = apply {
-        parameters["analysis_depth"] = depth.toRequestBody()
-    }
-
-    fun setMoodIntensity(intensity: Float) = apply {
-        parameters["mood_intensity"] = intensity.toRequestBody()
+    fun setCulturalContext(context: String) = apply {
+        this.culturalContext = context
     }
 
     fun setMaxSongs(count: Int) = apply {
-        parameters["max_songs"] = count.toRequestBody()
+        this.maxSongs = count
     }
 
-    fun setVisualTheme(theme: String) = apply {
-        parameters["visual_theme"] = theme.toRequestBody()
-    }
-
-    fun setCulturalContext(context: String) = apply {
-        parameters["cultural_context"] = context.toRequestBody()
-    }
-
-    fun enableColorAnalysis(enable: Boolean = true) = apply {
-        parameters["color_analysis"] = enable.toRequestBody()
-    }
-
-    fun enableEmotionAnalysis(enable: Boolean = true) = apply {
-        parameters["emotion_analysis"] = enable.toRequestBody()
-    }
-
-    fun setLocation(latitude: Double?, longitude: Double?) = apply {
-        latitude?.let { parameters["latitude"] = it.toString().toRequestBody() }
-        longitude?.let { parameters["longitude"] = it.toString().toRequestBody() }
-    }
-
-    fun setDateTime(dateTime: String?) = apply {
-        dateTime?.let { parameters["datetime"] = it.toRequestBody() }
-    }
-
-    fun setExifData(exifJson: String) = apply {
-        parameters["exif_data"] = exifJson.toRequestBody("application/json")
+    fun setFacialAnalysisWeight(weight: Float) = apply {
+        this.facialAnalysisWeight = weight
     }
 
     suspend fun execute(apiService: GPTApiService): MusicResponse {
+        val imagepart = image ?: throw IllegalStateException("Image is required")
+
         return apiService.recommendMusic(
-            files = files,
+            image = imagepart,
             hashtags = hashtags.toRequestBody(),
-            exifData = parameters["exif_data"] ?: "{}".toRequestBody("application/json"),
-            analysisDepth = parameters["analysis_depth"] ?: "standard".toRequestBody(),
-            colorAnalysis = parameters["color_analysis"] ?: true.toRequestBody(),
-            emotionAnalysis = parameters["emotion_analysis"] ?: true.toRequestBody(),
-            maxSongs = parameters["max_songs"] ?: 8.toRequestBody(),
-            visualTheme = parameters["visual_theme"] ?: "auto".toRequestBody(),
-            culturalContext = parameters["cultural_context"] ?: "korean".toRequestBody(),
-            moodIntensity = parameters["mood_intensity"] ?: 0.5f.toRequestBody(),
-            latitude = parameters["latitude"],
-            longitude = parameters["longitude"],
-            datetime = parameters["datetime"]
+            culturalContext = culturalContext.toRequestBody(),
+            maxSongs = maxSongs.toRequestBody(),
+            facialAnalysisWeight = facialAnalysisWeight.toRequestBody()
         )
+    }
+}
+
+/**
+ * 얼굴 분석 요청 빌더
+ */
+class FaceAnalysisBuilder {
+    private var image: MultipartBody.Part? = null
+
+    fun setImage(imagePart: MultipartBody.Part) = apply {
+        this.image = imagePart
+    }
+
+    suspend fun execute(apiService: GPTApiService): FaceAnalysisResponse {
+        val imagePart = image ?: throw IllegalStateException("Image is required")
+        return apiService.analyzeFace(imagePart)
+    }
+}
+
+// =============== Utility Functions ===============
+
+/**
+ * 파일을 MultipartBody.Part로 변환하는 유틸리티 함수
+ */
+object ApiUtils {
+
+    /**
+     * 바이트 배열을 이미지 파트로 변환
+     */
+    fun createImagePart(
+        imageBytes: ByteArray,
+        filename: String = "image.jpg",
+        mimeType: String = "image/jpeg"
+    ): MultipartBody.Part {
+        val requestBody = RequestBody.create(mimeType.toMediaTypeOrNull(), imageBytes)
+        return MultipartBody.Part.createFormData("image", filename, requestBody)
+    }
+
+    /**
+     * URI를 MultipartBody.Part로 변환하는 확장 함수용 인터페이스
+     */
+    interface ImagePartConverter {
+        fun convertUriToImagePart(uri: android.net.Uri, context: android.content.Context): MultipartBody.Part?
+    }
+}
+
+// =============== Constants ===============
+
+/**
+ * API 관련 상수들
+ */
+object ApiConstants {
+
+    // Cultural Context
+    const val CULTURAL_CONTEXT_KOREAN = "korean"
+    const val CULTURAL_CONTEXT_JAPANESE = "japanese"
+    const val CULTURAL_CONTEXT_WESTERN = "western"
+    const val CULTURAL_CONTEXT_GLOBAL = "global"
+
+    // Max Songs
+    const val MIN_SONGS = 1
+    const val MAX_SONGS = 10
+    const val DEFAULT_SONGS = 8
+
+    // Facial Analysis Weight
+    const val MIN_FACIAL_WEIGHT = 0.0f
+    const val MAX_FACIAL_WEIGHT = 1.0f
+    const val DEFAULT_FACIAL_WEIGHT = 0.6f
+
+    // File Size Limits
+    const val MAX_IMAGE_SIZE_MB = 10
+    const val MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024
+
+    // Supported Image Types
+    val SUPPORTED_IMAGE_TYPES = listOf(
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/webp"
+    )
+}
+
+// =============== Error Handling ===============
+
+/**
+ * API 에러 타입
+ */
+sealed class ApiError : Exception() {
+    object NetworkError : ApiError()
+    object ServerError : ApiError()
+    object InvalidRequest : ApiError()
+    object ImageTooLarge : ApiError()
+    object UnsupportedImageType : ApiError()
+    data class HttpError(val code: Int, val errorMessage: String) : ApiError()
+    data class UnknownError(val throwable: Throwable) : ApiError()
+}
+
+/**
+ * API 응답 래퍼
+ */
+sealed class ApiResult<out T> {
+    data class Success<T>(val data: T) : ApiResult<T>()
+    data class Error(val error: ApiError) : ApiResult<Nothing>()
+    object Loading : ApiResult<Nothing>()
+}
+
+/**
+ * API 호출 결과를 안전하게 처리하는 확장 함수
+ */
+suspend fun <T> safeApiCall(apiCall: suspend () -> T): ApiResult<T> {
+    return try {
+        ApiResult.Success(apiCall())
+    } catch (e: java.net.SocketTimeoutException) {
+        ApiResult.Error(ApiError.NetworkError)
+    } catch (e: java.net.ConnectException) {
+        ApiResult.Error(ApiError.NetworkError)
+    } catch (e: retrofit2.HttpException) {
+        when (e.code()) {
+            400 -> ApiResult.Error(ApiError.InvalidRequest)
+            in 500..599 -> ApiResult.Error(ApiError.ServerError)
+            else -> ApiResult.Error(ApiError.HttpError(e.code(), e.message() ?: "Unknown HTTP error"))
+        }
+    } catch (e: Exception) {
+        ApiResult.Error(ApiError.UnknownError(e))
     }
 }

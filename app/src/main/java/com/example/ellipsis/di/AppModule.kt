@@ -27,27 +27,24 @@ object AppModule {
 
     /**
      * Gson 컨버터 설정
-     * 날짜 포맷, null 처리, 필드 네이밍 정책 등 설정
      */
     @Provides
     @Singleton
     fun provideGson(): Gson {
         return GsonBuilder()
-            .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") // ISO 8601 형식
-            .serializeNulls() // null 값도 JSON에 포함
+            .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+            .serializeNulls()
             .setFieldNamingStrategy { field ->
-                // 카멜케이스를 스네이크케이스로 변환 (서버 호환성)
                 field.name.replace(Regex("([a-z])([A-Z])")) { matchResult ->
                     "${matchResult.groupValues[1]}_${matchResult.groupValues[2].lowercase()}"
                 }
             }
-            .setPrettyPrinting() // 디버깅용 포맷팅
+            .setPrettyPrinting()
             .create()
     }
 
     /**
      * HTTP 캐시 설정
-     * 이미지나 설정 정보 캐싱용
      */
     @Provides
     @Singleton
@@ -59,7 +56,6 @@ object AppModule {
 
     /**
      * 로깅 인터셉터
-     * 개발 환경에서만 활성화
      */
     @Provides
     @Singleton
@@ -67,15 +63,15 @@ object AppModule {
     fun provideLoggingInterceptor(): Interceptor {
         return HttpLoggingInterceptor().apply {
             level = if (BuildConfig.DEBUG) {
-                HttpLoggingInterceptor.Level.BODY // 개발: 전체 로깅
+                HttpLoggingInterceptor.Level.BODY
             } else {
-                HttpLoggingInterceptor.Level.NONE // 프로덕션: 로깅 비활성화
+                HttpLoggingInterceptor.Level.NONE
             }
         }
     }
 
     /**
-     * API 키 인터셉터 (추후 인증용)
+     * API 헤더 인터셉터 (개선됨)
      */
     @Provides
     @Singleton
@@ -87,9 +83,9 @@ object AppModule {
                 .addHeader("Content-Type", "application/json")
                 .addHeader("Accept", "application/json")
                 .addHeader("User-Agent", "Ellipsis-Android/1.0.0")
-                // .addHeader("Authorization", "Bearer $API_KEY") // 추후 API 키 추가
                 .addHeader("X-Client-Version", "1.0.0")
                 .addHeader("X-Platform", "Android")
+                .addHeader("Connection", "keep-alive") // 연결 유지
                 .build()
 
             chain.proceed(newRequest)
@@ -97,8 +93,7 @@ object AppModule {
     }
 
     /**
-     * 에러 처리 인터셉터
-     * 네트워크 오류, 서버 오류 등을 일관되게 처리
+     * 에러 처리 인터셉터 (개선됨)
      */
     @Provides
     @Singleton
@@ -110,32 +105,28 @@ object AppModule {
             try {
                 val response = chain.proceed(request)
 
-                // 서버 오류 응답 처리
+                // 연결 상태 로깅 (ADB 포워딩 디버깅용)
+                android.util.Log.d("API_CONNECTION",
+                    "Request to: ${request.url} | Status: ${response.code}")
+
                 if (!response.isSuccessful) {
                     when (response.code) {
-                        429 -> {
-                            // Rate Limit - 잠시 대기 후 재시도 로직 추가 가능
-                            android.util.Log.w("API", "Rate limit exceeded")
-                        }
-                        500, 502, 503, 504 -> {
-                            // 서버 오류 - 재시도 로직 추가 가능
-                            android.util.Log.e("API", "Server error: ${response.code}")
-                        }
+                        429 -> android.util.Log.w("API", "Rate limit exceeded")
+                        500, 502, 503, 504 -> android.util.Log.e("API", "Server error: ${response.code}")
+                        else -> android.util.Log.w("API", "HTTP error: ${response.code}")
                     }
                 }
 
                 response
             } catch (e: Exception) {
-                // 네트워크 오류 로깅
-                android.util.Log.e("API", "Network error", e)
+                android.util.Log.e("API_CONNECTION", "Connection failed to: ${request.url}", e)
                 throw e
             }
         }
     }
 
     /**
-     * OkHttpClient 설정
-     * 타임아웃, 인터셉터, 캐시 등 모든 네트워크 설정
+     * OkHttpClient 설정 (ADB 포워딩 최적화)
      */
     @Provides
     @Singleton
@@ -146,35 +137,44 @@ object AppModule {
         @ErrorHandlingInterceptor errorHandlingInterceptor: Interceptor
     ): OkHttpClient {
         return OkHttpClient.Builder()
-            // 타임아웃 설정 (이미지 업로드 고려)
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(60, TimeUnit.SECONDS) // 이미지 분석 시간 고려
-            .writeTimeout(60, TimeUnit.SECONDS) // 이미지 업로드 시간 고려
+            // ADB 포워딩은 로컬 연결이므로 타임아웃 줄임
+            .connectTimeout(10, TimeUnit.SECONDS)  // 기존 30초 → 10초
+            .readTimeout(30, TimeUnit.SECONDS)     // 기존 60초 → 30초
+            .writeTimeout(30, TimeUnit.SECONDS)    // 기존 60초 → 30초
+            .callTimeout(60, TimeUnit.SECONDS)     // 전체 호출 타임아웃 추가
 
             // 캐시 설정
             .cache(cache)
 
-            // 인터셉터 순서 중요!
-            .addInterceptor(authInterceptor) // 1. 인증 헤더 추가
-            .addInterceptor(errorHandlingInterceptor) // 2. 에러 처리
-            .addNetworkInterceptor(loggingInterceptor) // 3. 로깅 (가장 마지막)
+            // 인터셉터 순서
+            .addInterceptor(authInterceptor)
+            .addInterceptor(errorHandlingInterceptor)
+            .addNetworkInterceptor(loggingInterceptor)
 
-            // 재시도 설정
+            // 재시도 설정 (ADB 연결은 안정적이므로 줄임)
             .retryOnConnectionFailure(true)
-            .build() // build() 메서드 위치 수정
+
+            // Keep-Alive 설정 (ADB 연결 안정성 향상)
+            .connectionPool(
+                okhttp3.ConnectionPool(5, 5, TimeUnit.MINUTES)
+            )
+            .build()
     }
 
     /**
-     * Retrofit 인스턴스
+     * Retrofit 인스턴스 (ADB 포트 포워딩 사용)
      */
     @Provides
     @Singleton
-    fun provideRetrofit(
-        okHttpClient: OkHttpClient,
-        gson: Gson
-    ): Retrofit {
+    fun provideRetrofit(okHttpClient: OkHttpClient, gson: Gson): Retrofit {
+        // 🔧 개발 중에는 강제로 localhost 사용
+        val baseUrl = "http://localhost:8000/"
+
+        android.util.Log.i("RETROFIT_INIT", " Base URL: $baseUrl")
+        android.util.Log.i("RETROFIT_INIT", " 강제 개발 모드 활성화")
+
         return Retrofit.Builder()
-            .baseUrl("http://192.168.219.107:8000/") // 개발용 URL 직접 설정
+            .baseUrl(baseUrl)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
@@ -190,8 +190,16 @@ object AppModule {
     }
 
     /**
-     * 설정 관리자
+     * 개발용 연결 테스트 헬퍼
      */
+    @Provides
+    @Singleton
+    fun provideConnectionTester(): ConnectionTester {
+        return ConnectionTester()
+    }
+
+    // 나머지 기존 Provides 함수들...
+
     @Provides
     @Singleton
     fun provideAppConfig(): AppConfig {
@@ -203,32 +211,23 @@ object AppModule {
             defaultMoodIntensity = 0.5f,
             defaultVisualTheme = "auto",
             defaultCulturalContext = "korean",
-            cacheExpiration = 24 * 60 * 60 * 1000L, // 24시간
+            cacheExpiration = 24 * 60 * 60 * 1000L,
             enableDebugLogging = BuildConfig.DEBUG
         )
     }
 
-    /**
-     * 사용자 설정 관리자
-     */
     @Provides
     @Singleton
     fun provideUserPreferencesManager(@ApplicationContext context: Context): UserPreferencesManager {
         return UserPreferencesManager(context)
     }
 
-    /**
-     * 메모리 관리자
-     */
     @Provides
     @Singleton
     fun provideMemoryManager(@ApplicationContext context: Context): MemoryManager {
         return MemoryManager(context)
     }
 
-    /**
-     * 분석 결과 캐시 관리자
-     */
     @Provides
     @Singleton
     fun provideAnalysisCacheManager(@ApplicationContext context: Context): AnalysisCacheManager {
@@ -236,7 +235,45 @@ object AppModule {
     }
 }
 
-// =============== Qualifier 어노테이션들 ===============
+// =============== 연결 테스트 헬퍼 클래스 ===============
+
+/**
+ * ADB 포워딩 연결 테스트용 헬퍼
+ */
+class ConnectionTester {
+
+    suspend fun testConnection(): ConnectionResult {
+        return try {
+            val client = OkHttpClient.Builder()
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(5, TimeUnit.SECONDS)
+                .build()
+
+            val request = okhttp3.Request.Builder()
+                .url("http://localhost:8000/health") // 헬스 체크 엔드포인트
+                .build()
+
+            val response = client.newCall(request).execute()
+
+            if (response.isSuccessful) {
+                ConnectionResult.Success("ADB 포워딩 연결 성공!")
+            } else {
+                ConnectionResult.Error("서버 응답 오류: ${response.code}")
+            }
+        } catch (e: java.net.ConnectException) {
+            ConnectionResult.Error("ADB 포워딩 설정되지 않음 또는 서버 미실행")
+        } catch (e: Exception) {
+            ConnectionResult.Error("연결 실패: ${e.localizedMessage}")
+        }
+    }
+}
+
+sealed class ConnectionResult {
+    data class Success(val message: String) : ConnectionResult()
+    data class Error(val message: String) : ConnectionResult()
+}
+
+// =============== 기존 Qualifier들 ===============
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
@@ -250,11 +287,8 @@ annotation class AuthInterceptor
 @Retention(AnnotationRetention.BINARY)
 annotation class ErrorHandlingInterceptor
 
-// =============== 설정 및 관리자 클래스들 ===============
+// =============== 기존 설정 클래스들 ===============
 
-/**
- * 앱 전체 설정
- */
 data class AppConfig(
     val enableColorAnalysis: Boolean,
     val enableEmotionAnalysis: Boolean,
@@ -267,9 +301,6 @@ data class AppConfig(
     val enableDebugLogging: Boolean
 )
 
-/**
- * 사용자 설정 관리자
- */
 class UserPreferencesManager(private val context: Context) {
     private val prefs = context.getSharedPreferences("user_preferences", Context.MODE_PRIVATE)
 
@@ -314,9 +345,6 @@ class UserPreferencesManager(private val context: Context) {
     }
 }
 
-/**
- * 메모리(기억) 관리자
- */
 class MemoryManager(private val context: Context) {
     private val prefs = context.getSharedPreferences("memories", Context.MODE_PRIVATE)
 
@@ -336,7 +364,6 @@ class MemoryManager(private val context: Context) {
         prefs.edit().putLong("last_memory_date", timestamp).apply()
     }
 
-    // 추후 SQLite 데이터베이스로 확장 가능
     fun getFavoriteMemories(): List<String> {
         return prefs.getStringSet("favorite_memories", emptySet())?.toList() ?: emptyList()
     }
@@ -348,9 +375,6 @@ class MemoryManager(private val context: Context) {
     }
 }
 
-/**
- * 분석 결과 캐시 관리자
- */
 class AnalysisCacheManager(private val context: Context) {
     private val cacheDir = File(context.cacheDir, "analysis_cache")
 
@@ -375,7 +399,7 @@ class AnalysisCacheManager(private val context: Context) {
     }
 
     private fun isExpired(file: File): Boolean {
-        val expiration = 24 * 60 * 60 * 1000L // 24시간
+        val expiration = 24 * 60 * 60 * 1000L
         return (System.currentTimeMillis() - file.lastModified()) > expiration
     }
 
